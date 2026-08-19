@@ -22,6 +22,11 @@ config PROSPECTOR_STATUS_SCREEN_OPERATOR
     help
         Technical and information dense layout
 
+config PROSPECTOR_STATUS_SCREEN_BONGO
+    bool "Bongo Cat layout"
+    help
+        Bongo cat that taps along with typing, with WPM and layer name
+
 endchoice
 
 config PROSPECTOR_ROTATE_DISPLAY_180
