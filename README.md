@@ -65,13 +65,63 @@ For more information on ZMK Modules and building locally, see [the ZMK docs page
 
 ## Status Screens
 
-Classic is used by default. To choose a different screen, add one of the following to your `.conf` file:
+Classic is used by default. To choose a different boot screen, add one of the following to your `.conf` file:
 
 ```ini
 CONFIG_PROSPECTOR_STATUS_SCREEN_RADII=y
 CONFIG_PROSPECTOR_STATUS_SCREEN_FIELD=y
 CONFIG_PROSPECTOR_STATUS_SCREEN_OPERATOR=y
 ```
+
+### Multiple screens + swipe navigation (touchscreen)
+
+The Prospector's display (Waveshare 1.69" Touch LCD) has a CST816S touch
+controller, but the stock assembly guide cuts its wires (`TP_SDA`, `TP_SCL`,
+`TP_RST`, `TP_IRQ`). To use touch, solder them to the XIAO:
+
+| Display pin | XIAO pin |
+| ----------- | -------- |
+| `TP_SDA`    | D4 (SDA) |
+| `TP_SCL`    | D5 (SCL) |
+| `TP_RST`    | D0       |
+| `TP_IRQ`    | D1       |
+
+Then define the touch nodes in your dongle's `.overlay`:
+
+```dts
+&i2c1 {
+    cst816s: cst816s@15 {
+        compatible = "hynitron,cst816s";
+        status = "okay";
+        reg = <0x15>;
+        irq-gpios = <&xiao_d 1 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+        rst-gpios = <&xiao_d 0 GPIO_ACTIVE_LOW>;
+    };
+};
+
+/ {
+    lvgl_pointer_input: lvgl_pointer_input {
+        compatible = "zephyr,lvgl-pointer-input";
+        input = <&cst816s>;
+    };
+};
+```
+
+(If your display is mounted/rotated differently, add `invert-x;` / `invert-y;`
+/ `swap-xy;` to the `lvgl_pointer_input` node.)
+
+and compile in the screens you want to swipe between (the boot screen chosen
+above is always enabled):
+
+```ini
+CONFIG_PROSPECTOR_SCREEN_OPERATOR_ENABLED=y
+```
+
+Swipe left/right anywhere on the screen to cycle through the compiled screens
+with a slide animation. With multiple screens enabled the LVGL heap is raised
+to 32K automatically; if you hit a RAM overflow, also add
+`CONFIG_LV_Z_VDB_SIZE=25`. To disable swipe (single screen, smaller heap):
+`CONFIG_PROSPECTOR_SWIPE_NAVIGATION=n`.
 
 ## Usage
 

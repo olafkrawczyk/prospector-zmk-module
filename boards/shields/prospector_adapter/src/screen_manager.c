@@ -151,6 +151,11 @@ static void attach_gesture_handler(lv_obj_t *screen) {
 lv_obj_t *zmk_display_status_screen(void) {
     uint8_t default_idx = default_screen_index();
 
+    /* Guard against a boot screen that isn't compiled in. */
+    if (default_idx >= N_ENABLED) {
+        default_idx = 0;
+    }
+
 #ifdef SWIPE_NAV_ACTIVE
     for (uint8_t i = 0; i < N_ENABLED; i++) {
         screens[i].obj = screens[i].create();
