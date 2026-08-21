@@ -192,8 +192,8 @@ static int wpm_event_handler(const zmk_event_t *eh) {
     return ZMK_EV_EVENT_BUBBLE;
 }
 
-ZMK_LISTENER(widget_line_segments, wpm_event_handler);
-ZMK_SUBSCRIPTION(widget_line_segments, zmk_wpm_state_changed);
+ZMK_LISTENER(widget_field_line_segments, wpm_event_handler);
+ZMK_SUBSCRIPTION(widget_field_line_segments, zmk_wpm_state_changed);
 
 // Calculate how many columns a label width covers (starting from column 0)
 static int width_to_columns(int width) {
