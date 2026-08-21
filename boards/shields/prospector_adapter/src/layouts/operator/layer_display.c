@@ -14,7 +14,7 @@ struct layer_display_state {
 };
 
 static void layer_display_update_cb(struct layer_display_state state) {
-    struct zmk_widget_layer_display *widget;
+    struct zmk_widget_operator_layer_display *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
         for (int i = 0; i < LAYER_DOT_COUNT; i++) {
             lv_color_t color = (i == state.index)
@@ -31,11 +31,11 @@ static struct layer_display_state layer_display_get_state(const zmk_event_t *eh)
     };
 }
 
-ZMK_DISPLAY_WIDGET_LISTENER(widget_layer_display, struct layer_display_state,
+ZMK_DISPLAY_WIDGET_LISTENER(widget_operator_layer_display, struct layer_display_state,
                             layer_display_update_cb, layer_display_get_state)
-ZMK_SUBSCRIPTION(widget_layer_display, zmk_layer_state_changed);
+ZMK_SUBSCRIPTION(widget_operator_layer_display, zmk_layer_state_changed);
 
-int zmk_widget_layer_display_init(struct zmk_widget_layer_display *widget, lv_obj_t *parent) {
+int zmk_widget_operator_layer_display_init(struct zmk_widget_operator_layer_display *widget, lv_obj_t *parent) {
     widget->obj = lv_obj_create(parent);
     lv_obj_set_size(widget->obj, 260, 6);
     lv_obj_set_style_bg_opa(widget->obj, LV_OPA_TRANSP, LV_PART_MAIN);
@@ -57,11 +57,11 @@ int zmk_widget_layer_display_init(struct zmk_widget_layer_display *widget, lv_ob
     }
 
     sys_slist_append(&widgets, &widget->node);
-    widget_layer_display_init();
+    widget_operator_layer_display_init();
 
     return 0;
 }
 
-lv_obj_t *zmk_widget_layer_display_obj(struct zmk_widget_layer_display *widget) {
+lv_obj_t *zmk_widget_operator_layer_display_obj(struct zmk_widget_operator_layer_display *widget) {
     return widget->obj;
 }

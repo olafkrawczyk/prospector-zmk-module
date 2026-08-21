@@ -43,7 +43,7 @@ static bool output_visible = false;
 static void set_output_visible(bool visible) {
     output_visible = visible;
 
-    struct zmk_widget_output *widget;
+    struct zmk_widget_classic_output *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
         if (visible) {
             lv_obj_fade_in(widget->container, 200, 0);
@@ -61,7 +61,7 @@ static void profile_display_timeout_handler(struct k_work *work) {
 }
 
 static void battery_bar_uncompact_handler(struct k_work *work) {
-    zmk_widget_battery_bar_set_compact(false);
+    zmk_widget_classic_battery_bar_set_compact(false);
 }
 
 static void output_fade_in_handler(struct k_work *work) {
@@ -92,7 +92,7 @@ static void stop_breathing_anim(lv_obj_t *obj) {
     lv_obj_remove_local_style_prop(obj, LV_STYLE_OPA, LV_PART_MAIN);
 }
 
-static void update_output_widget(struct zmk_widget_output *widget, uint8_t profile_index) {
+static void update_output_widget(struct zmk_widget_classic_output *widget, uint8_t profile_index) {
     char profile_text[4];
     snprintf(profile_text, sizeof(profile_text), "%d", profile_index);
     lv_label_set_text(widget->profile_label, profile_text);
@@ -132,7 +132,7 @@ static void update_output_widget(struct zmk_widget_output *widget, uint8_t profi
 }
 
 static void profile_refresh_handler(struct k_work *work) {
-    struct zmk_widget_output *widget;
+    struct zmk_widget_classic_output *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
         update_output_widget(widget, active_profile_index);
     }
@@ -150,18 +150,18 @@ static int endpoint_changed_listener(const zmk_event_t *eh) {
         if (active_transport == ZMK_TRANSPORT_BLE) {
             k_work_cancel_delayable(&profile_display_timeout_work);
             if (!output_visible) {
-                zmk_widget_battery_bar_set_compact(true);
+                zmk_widget_classic_battery_bar_set_compact(true);
                 k_work_reschedule(&output_fade_in_work, BATTERY_BAR_DELAY);
             }
         } else {
             if (!output_visible) {
-                zmk_widget_battery_bar_set_compact(true);
+                zmk_widget_classic_battery_bar_set_compact(true);
                 k_work_reschedule(&output_fade_in_work, BATTERY_BAR_DELAY);
             }
             k_work_reschedule(&profile_display_timeout_work, PROFILE_DISPLAY_TIMEOUT);
         }
 
-        struct zmk_widget_output *widget;
+        struct zmk_widget_classic_output *widget;
         SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
             update_output_widget(widget, active_profile_index);
         }
@@ -178,11 +178,11 @@ static int ble_active_profile_changed_listener(const zmk_event_t *eh) {
             set_output_visible(false);
             k_work_reschedule(&profile_refresh_work, FADE_DURATION);
         } else {
-            struct zmk_widget_output *widget;
+            struct zmk_widget_classic_output *widget;
             SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
                 update_output_widget(widget, active_profile_index);
             }
-            zmk_widget_battery_bar_set_compact(true);
+            zmk_widget_classic_battery_bar_set_compact(true);
             k_work_reschedule(&output_fade_in_work, BATTERY_BAR_DELAY);
         }
         k_work_reschedule(&profile_display_timeout_work, PROFILE_DISPLAY_TIMEOUT);
@@ -196,7 +196,7 @@ ZMK_SUBSCRIPTION(widget_output_endpoint, zmk_endpoint_changed);
 ZMK_LISTENER(widget_output_profile, ble_active_profile_changed_listener);
 ZMK_SUBSCRIPTION(widget_output_profile, zmk_ble_active_profile_changed);
 
-int zmk_widget_output_init(struct zmk_widget_output *widget, lv_obj_t *parent) {
+int zmk_widget_classic_output_init(struct zmk_widget_classic_output *widget, lv_obj_t *parent) {
     widget->container = lv_obj_create(parent);
     lv_obj_set_size(widget->container, 50, 30);
     lv_obj_set_style_border_width(widget->container, 0, LV_PART_MAIN);
@@ -222,7 +222,7 @@ int zmk_widget_output_init(struct zmk_widget_output *widget, lv_obj_t *parent) {
         active_transport = selected.transport;
 
         if (active_transport == ZMK_TRANSPORT_BLE) {
-            zmk_widget_battery_bar_set_compact(true);
+            zmk_widget_classic_battery_bar_set_compact(true);
             output_visible = true;
         } else {
             lv_obj_set_style_opa(widget->container, 0, LV_PART_MAIN);
@@ -236,6 +236,6 @@ int zmk_widget_output_init(struct zmk_widget_output *widget, lv_obj_t *parent) {
     return 0;
 }
 
-lv_obj_t *zmk_widget_output_obj(struct zmk_widget_output *widget) {
+lv_obj_t *zmk_widget_classic_output_obj(struct zmk_widget_classic_output *widget) {
     return widget->container;
 }

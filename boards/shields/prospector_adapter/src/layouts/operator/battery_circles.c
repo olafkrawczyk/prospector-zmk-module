@@ -297,8 +297,8 @@ static void set_connection_status(uint8_t source, bool connected) {
     update_peripheral_display(source);
 }
 
-void battery_circles_battery_update_cb(struct battery_update_state state) {
-    struct zmk_widget_battery_circles *widget;
+void operator_battery_circles_battery_update_cb(struct battery_update_state state) {
+    struct zmk_widget_operator_battery_circles *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
         if (widget->initialized) {
             set_battery_level(state.source, state.level);
@@ -323,8 +323,8 @@ static struct battery_update_state battery_circles_get_battery_state(const zmk_e
     };
 }
 
-void battery_circles_connection_update_cb(struct connection_update_state state) {
-    struct zmk_widget_battery_circles *widget;
+void operator_battery_circles_connection_update_cb(struct connection_update_state state) {
+    struct zmk_widget_operator_battery_circles *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
         if (widget->initialized) {
             set_connection_status(state.source, state.connected);
@@ -349,15 +349,15 @@ static struct connection_update_state battery_circles_get_connection_state(const
     };
 }
 
-ZMK_DISPLAY_WIDGET_LISTENER(widget_battery_circles_battery, struct battery_update_state,
-                            battery_circles_battery_update_cb, battery_circles_get_battery_state);
-ZMK_SUBSCRIPTION(widget_battery_circles_battery, zmk_peripheral_battery_state_changed);
+ZMK_DISPLAY_WIDGET_LISTENER(widget_operator_battery_circles_battery, struct battery_update_state,
+                            operator_battery_circles_battery_update_cb, battery_circles_get_battery_state);
+ZMK_SUBSCRIPTION(widget_operator_battery_circles_battery, zmk_peripheral_battery_state_changed);
 
-ZMK_DISPLAY_WIDGET_LISTENER(widget_battery_circles_connection, struct connection_update_state,
-                            battery_circles_connection_update_cb, battery_circles_get_connection_state);
-ZMK_SUBSCRIPTION(widget_battery_circles_connection, zmk_split_central_status_changed);
+ZMK_DISPLAY_WIDGET_LISTENER(widget_operator_battery_circles_connection, struct connection_update_state,
+                            operator_battery_circles_connection_update_cb, battery_circles_get_connection_state);
+ZMK_SUBSCRIPTION(widget_operator_battery_circles_connection, zmk_split_central_status_changed);
 
-int zmk_widget_battery_circles_init(struct zmk_widget_battery_circles *widget, lv_obj_t *parent) {
+int zmk_widget_operator_battery_circles_init(struct zmk_widget_operator_battery_circles *widget, lv_obj_t *parent) {
     init_styles();
 
     widget->obj = lv_obj_create(parent);
@@ -505,8 +505,8 @@ int zmk_widget_battery_circles_init(struct zmk_widget_battery_circles *widget, l
         }
     }
 
-    widget_battery_circles_battery_init();
-    widget_battery_circles_connection_init();
+    widget_operator_battery_circles_battery_init();
+    widget_operator_battery_circles_connection_init();
 
     widget->initialized = true;
     sys_slist_append(&widgets, &widget->node);
@@ -514,6 +514,6 @@ int zmk_widget_battery_circles_init(struct zmk_widget_battery_circles *widget, l
     return 0;
 }
 
-lv_obj_t *zmk_widget_battery_circles_obj(struct zmk_widget_battery_circles *widget) {
+lv_obj_t *zmk_widget_operator_battery_circles_obj(struct zmk_widget_operator_battery_circles *widget) {
     return widget->obj;
 }

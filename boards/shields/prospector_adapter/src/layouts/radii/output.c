@@ -30,7 +30,7 @@ static enum zmk_transport active_transport = ZMK_TRANSPORT_USB;
 
 static void profile_display_timeout_handler(struct k_work *work) {
     if (active_transport != ZMK_TRANSPORT_BLE) {
-        zmk_widget_modifier_indicator_set_compact(false);
+        zmk_widget_radii_modifier_indicator_set_compact(false);
     }
 }
 
@@ -58,7 +58,7 @@ static void stop_breathing_anim(lv_obj_t *obj) {
     lv_obj_remove_local_style_prop(obj, LV_STYLE_OPA, LV_PART_MAIN);
 }
 
-static void update_output_widget(struct zmk_widget_output *widget, uint8_t profile_index) {
+static void update_output_widget(struct zmk_widget_radii_output *widget, uint8_t profile_index) {
     char profile_text[4];
     snprintf(profile_text, sizeof(profile_text), "%d", profile_index);
     lv_label_set_text(widget->profile_label, profile_text);
@@ -105,13 +105,13 @@ static int endpoint_changed_listener(const zmk_event_t *eh) {
 
         if (active_transport == ZMK_TRANSPORT_BLE) {
             k_work_cancel_delayable(&profile_display_timeout_work);
-            zmk_widget_modifier_indicator_set_compact(true);
+            zmk_widget_radii_modifier_indicator_set_compact(true);
         } else {
-            zmk_widget_modifier_indicator_set_compact(true);
+            zmk_widget_radii_modifier_indicator_set_compact(true);
             k_work_reschedule(&profile_display_timeout_work, PROFILE_DISPLAY_TIMEOUT);
         }
 
-        struct zmk_widget_output *widget;
+        struct zmk_widget_radii_output *widget;
         SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
             update_output_widget(widget, active_profile_index);
         }
@@ -124,10 +124,10 @@ static int ble_active_profile_changed_listener(const zmk_event_t *eh) {
     if (event) {
         active_profile_index = event->index;
 
-        zmk_widget_modifier_indicator_set_compact(true);
+        zmk_widget_radii_modifier_indicator_set_compact(true);
         k_work_reschedule(&profile_display_timeout_work, PROFILE_DISPLAY_TIMEOUT);
 
-        struct zmk_widget_output *widget;
+        struct zmk_widget_radii_output *widget;
         SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
             update_output_widget(widget, active_profile_index);
         }
@@ -141,7 +141,7 @@ ZMK_SUBSCRIPTION(widget_output_endpoint, zmk_endpoint_changed);
 ZMK_LISTENER(widget_output_profile, ble_active_profile_changed_listener);
 ZMK_SUBSCRIPTION(widget_output_profile, zmk_ble_active_profile_changed);
 
-int zmk_widget_output_init(struct zmk_widget_output *widget, lv_obj_t *parent) {
+int zmk_widget_radii_output_init(struct zmk_widget_radii_output *widget, lv_obj_t *parent) {
     widget->container = lv_obj_create(parent);
     lv_obj_set_size(widget->container, 108, 30);
     // lv_obj_set_style_bg_color(widget->container, lv_color_hex(0x202020), LV_PART_MAIN);
@@ -169,7 +169,7 @@ int zmk_widget_output_init(struct zmk_widget_output *widget, lv_obj_t *parent) {
         active_transport = selected.transport;
 
         if (active_transport == ZMK_TRANSPORT_BLE) {
-            zmk_widget_modifier_indicator_set_compact(true);
+            zmk_widget_radii_modifier_indicator_set_compact(true);
         }
     }
 
@@ -180,6 +180,6 @@ int zmk_widget_output_init(struct zmk_widget_output *widget, lv_obj_t *parent) {
     return 0;
 }
 
-lv_obj_t *zmk_widget_output_obj(struct zmk_widget_output *widget) {
+lv_obj_t *zmk_widget_radii_output_obj(struct zmk_widget_radii_output *widget) {
     return widget->container;
 }

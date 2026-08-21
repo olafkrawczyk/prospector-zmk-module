@@ -3,10 +3,10 @@
 #include <lvgl.h>
 #include <zephyr/kernel.h>
 
-struct zmk_widget_layer_label {
+struct zmk_widget_field_layer_label {
     sys_snode_t node;
     lv_obj_t *obj;
 };
 
-int zmk_widget_layer_label_init(struct zmk_widget_layer_label *widget, lv_obj_t *parent);
-lv_obj_t *zmk_widget_layer_label_obj(struct zmk_widget_layer_label *widget);
+int zmk_widget_field_layer_label_init(struct zmk_widget_field_layer_label *widget, lv_obj_t *parent);
+lv_obj_t *zmk_widget_field_layer_label_obj(struct zmk_widget_field_layer_label *widget);

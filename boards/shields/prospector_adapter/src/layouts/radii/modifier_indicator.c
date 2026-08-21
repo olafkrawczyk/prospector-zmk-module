@@ -68,7 +68,7 @@ static lv_obj_t *create_win_icon(lv_obj_t *parent) {
 }
 
 static void modifier_indicator_update_cb(struct modifier_indicator_state state) {
-    struct zmk_widget_modifier_indicator *widget;
+    struct zmk_widget_radii_modifier_indicator *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
         bool is_windows = modifier_order_is_windows();
         for (int i = 0; i < 4; i++) {
@@ -109,8 +109,8 @@ static void animate_panel_resize(lv_obj_t *obj, int32_t target_height) {
     lv_anim_start(&anim);
 }
 
-void zmk_widget_modifier_indicator_set_compact(bool compact) {
-    struct zmk_widget_modifier_indicator *widget;
+void zmk_widget_radii_modifier_indicator_set_compact(bool compact) {
+    struct zmk_widget_radii_modifier_indicator *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
         animate_panel_resize(widget->obj, compact ? PANEL_HEIGHT_COMPACT : PANEL_HEIGHT_FULL);
     }
@@ -143,19 +143,19 @@ static struct modifier_indicator_state modifier_indicator_get_state(const zmk_ev
     return state;
 }
 
-ZMK_DISPLAY_WIDGET_LISTENER(widget_modifier_indicator, struct modifier_indicator_state,
+ZMK_DISPLAY_WIDGET_LISTENER(widget_radii_modifier_indicator, struct modifier_indicator_state,
                             modifier_indicator_update_cb, modifier_indicator_get_state)
-ZMK_SUBSCRIPTION(widget_modifier_indicator, zmk_keycode_state_changed);
+ZMK_SUBSCRIPTION(widget_radii_modifier_indicator, zmk_keycode_state_changed);
 
 #ifdef CONFIG_DT_HAS_ZMK_BEHAVIOR_CAPS_WORD_ENABLED
-ZMK_SUBSCRIPTION(widget_modifier_indicator, zmk_caps_word_state_changed);
+ZMK_SUBSCRIPTION(widget_radii_modifier_indicator, zmk_caps_word_state_changed);
 #endif
 
 static const int32_t mod_positions[4][2] = {
     {14, 27}, {50, 27}, {14, 64}, {50, 64}
 };
 
-int zmk_widget_modifier_indicator_init(struct zmk_widget_modifier_indicator *widget, lv_obj_t *parent) {
+int zmk_widget_radii_modifier_indicator_init(struct zmk_widget_radii_modifier_indicator *widget, lv_obj_t *parent) {
     widget->obj = lv_obj_create(parent);
     lv_obj_set_size(widget->obj, 108, 178);
     lv_obj_set_style_bg_color(widget->obj, lv_color_hex(DISPLAY_COLOR_MOD_PANEL_BG), LV_PART_MAIN);
@@ -186,11 +186,11 @@ int zmk_widget_modifier_indicator_init(struct zmk_widget_modifier_indicator *wid
 
     sys_slist_append(&widgets, &widget->node);
 
-    widget_modifier_indicator_init();
+    widget_radii_modifier_indicator_init();
 
     return 0;
 }
 
-lv_obj_t *zmk_widget_modifier_indicator_obj(struct zmk_widget_modifier_indicator *widget) {
+lv_obj_t *zmk_widget_radii_modifier_indicator_obj(struct zmk_widget_radii_modifier_indicator *widget) {
     return widget->obj;
 }

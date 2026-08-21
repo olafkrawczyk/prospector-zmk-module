@@ -4,7 +4,7 @@
 #include <zephyr/kernel.h>
 #include <zmk/ble.h>
 
-struct zmk_widget_output {
+struct zmk_widget_operator_output {
     sys_snode_t node;
     lv_obj_t *obj;
     lv_obj_t *usb_btn;
@@ -12,5 +12,5 @@ struct zmk_widget_output {
     lv_obj_t *slots[ZMK_BLE_PROFILE_COUNT];
 };
 
-int zmk_widget_output_init(struct zmk_widget_output *widget, lv_obj_t *parent);
-lv_obj_t *zmk_widget_output_obj(struct zmk_widget_output *widget);
+int zmk_widget_operator_output_init(struct zmk_widget_operator_output *widget, lv_obj_t *parent);
+lv_obj_t *zmk_widget_operator_output_obj(struct zmk_widget_operator_output *widget);

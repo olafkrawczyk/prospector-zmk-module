@@ -33,7 +33,7 @@ struct layer_state {
 };
 
 static void wpm_meter_render(int active_bars) {
-    struct zmk_widget_wpm_meter *widget;
+    struct zmk_widget_operator_wpm_meter *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
         if (active_bars != prev_active_bars) {
             int min_bar = (active_bars < prev_active_bars) ? active_bars : prev_active_bars;
@@ -122,7 +122,7 @@ static struct wpm_meter_state wpm_meter_get_state(const zmk_event_t *eh) {
 }
 
 static void layer_update_cb(struct layer_state state) {
-    struct zmk_widget_wpm_meter *widget;
+    struct zmk_widget_operator_wpm_meter *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
         const char *layer_name = zmk_keymap_layer_name(zmk_keymap_layer_index_to_id(state.index));
         char display_name[32];
@@ -147,15 +147,15 @@ static struct layer_state layer_get_state(const zmk_event_t *eh) {
     return (struct layer_state){.index = zmk_keymap_highest_layer_active()};
 }
 
-ZMK_DISPLAY_WIDGET_LISTENER(widget_wpm_meter, struct wpm_meter_state,
+ZMK_DISPLAY_WIDGET_LISTENER(widget_operator_wpm_meter, struct wpm_meter_state,
                             wpm_meter_update_cb, wpm_meter_get_state)
-ZMK_SUBSCRIPTION(widget_wpm_meter, zmk_wpm_state_changed);
+ZMK_SUBSCRIPTION(widget_operator_wpm_meter, zmk_wpm_state_changed);
 
-ZMK_DISPLAY_WIDGET_LISTENER(widget_wpm_meter_layer, struct layer_state,
+ZMK_DISPLAY_WIDGET_LISTENER(widget_operator_wpm_meter_layer, struct layer_state,
                             layer_update_cb, layer_get_state)
-ZMK_SUBSCRIPTION(widget_wpm_meter_layer, zmk_layer_state_changed);
+ZMK_SUBSCRIPTION(widget_operator_wpm_meter_layer, zmk_layer_state_changed);
 
-int zmk_widget_wpm_meter_init(struct zmk_widget_wpm_meter *widget, lv_obj_t *parent) {
+int zmk_widget_operator_wpm_meter_init(struct zmk_widget_operator_wpm_meter *widget, lv_obj_t *parent) {
     widget->obj = lv_obj_create(parent);
     lv_obj_set_size(widget->obj, 260, 90);
     lv_obj_set_style_bg_opa(widget->obj, LV_OPA_TRANSP, LV_PART_MAIN);
@@ -209,14 +209,14 @@ int zmk_widget_wpm_meter_init(struct zmk_widget_wpm_meter *widget, lv_obj_t *par
     lv_obj_align(widget->layer_label, LV_ALIGN_BOTTOM_RIGHT, 9, 7);
 
     sys_slist_append(&widgets, &widget->node);
-    widget_wpm_meter_init();
-    widget_wpm_meter_layer_init();
+    widget_operator_wpm_meter_init();
+    widget_operator_wpm_meter_layer_init();
 
     k_work_init_delayable(&wpm_smooth_work, wpm_smooth_work_handler);
 
     return 0;
 }
 
-lv_obj_t *zmk_widget_wpm_meter_obj(struct zmk_widget_wpm_meter *widget) {
+lv_obj_t *zmk_widget_operator_wpm_meter_obj(struct zmk_widget_operator_wpm_meter *widget) {
     return widget->obj;
 }

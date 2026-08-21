@@ -20,7 +20,7 @@ static void layer_roller_set_sel(lv_obj_t *roller, struct layer_roller_state sta
 }
 
 static void layer_roller_update_cb(struct layer_roller_state state) {
-    struct zmk_widget_layer_roller *widget;
+    struct zmk_widget_classic_layer_roller *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
         layer_roller_set_sel(widget->obj, state);
     }
@@ -33,11 +33,11 @@ static struct layer_roller_state layer_roller_get_state(const zmk_event_t *eh) {
     };
 }
 
-ZMK_DISPLAY_WIDGET_LISTENER(widget_layer_roller, struct layer_roller_state, layer_roller_update_cb,
+ZMK_DISPLAY_WIDGET_LISTENER(widget_classic_layer_roller, struct layer_roller_state, layer_roller_update_cb,
                             layer_roller_get_state)
-ZMK_SUBSCRIPTION(widget_layer_roller, zmk_layer_state_changed);
+ZMK_SUBSCRIPTION(widget_classic_layer_roller, zmk_layer_state_changed);
 
-int zmk_widget_layer_roller_init(struct zmk_widget_layer_roller *widget, lv_obj_t *parent) {
+int zmk_widget_classic_layer_roller_init(struct zmk_widget_classic_layer_roller *widget, lv_obj_t *parent) {
     widget->obj = lv_roller_create(parent);
 
     layer_names_buffer[0] = '\0';
@@ -111,10 +111,10 @@ int zmk_widget_layer_roller_init(struct zmk_widget_layer_roller *widget, lv_obj_
 
     sys_slist_append(&widgets, &widget->node);
 
-    widget_layer_roller_init();
+    widget_classic_layer_roller_init();
     return 0;
 }
 
-lv_obj_t *zmk_widget_layer_roller_obj(struct zmk_widget_layer_roller *widget) {
+lv_obj_t *zmk_widget_classic_layer_roller_obj(struct zmk_widget_classic_layer_roller *widget) {
     return widget->obj;
 }

@@ -212,7 +212,7 @@ static int width_to_columns(int width) {
 static void update_label_excluded_cells(void) {
     label_excluded_cells = 0;
 
-    struct zmk_widget_line_segments *widget;
+    struct zmk_widget_field_line_segments *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
         // Layer label excludes cells in row 0
         if (widget->layer_label) {
@@ -239,7 +239,7 @@ static void label_size_changed_cb(lv_event_t *e) {
     update_label_excluded_cells();
 
     // Invalidate widget to redraw with new exclusions
-    struct zmk_widget_line_segments *widget;
+    struct zmk_widget_field_line_segments *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
         lv_obj_invalidate(widget->obj);
     }
@@ -400,13 +400,13 @@ static void timer_cb(lv_timer_t *timer) {
 
     lines_update();
 
-    struct zmk_widget_line_segments *widget;
+    struct zmk_widget_field_line_segments *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
         lv_obj_invalidate(widget->obj);
     }
 }
 
-int zmk_widget_line_segments_init(struct zmk_widget_line_segments *widget, lv_obj_t *parent) {
+int zmk_widget_field_line_segments_init(struct zmk_widget_field_line_segments *widget, lv_obj_t *parent) {
     init_lut();
 
     for (int row = 0; row < GRID_ROWS; row++) {
@@ -434,11 +434,11 @@ int zmk_widget_line_segments_init(struct zmk_widget_line_segments *widget, lv_ob
     return 0;
 }
 
-lv_obj_t *zmk_widget_line_segments_obj(struct zmk_widget_line_segments *widget) {
+lv_obj_t *zmk_widget_field_line_segments_obj(struct zmk_widget_field_line_segments *widget) {
     return widget->obj;
 }
 
-void zmk_widget_line_segments_set_labels(struct zmk_widget_line_segments *widget,
+void zmk_widget_field_line_segments_set_labels(struct zmk_widget_field_line_segments *widget,
                                          lv_obj_t *layer_label,
                                          lv_obj_t *battery_label) {
     widget->layer_label = layer_label;
@@ -454,7 +454,7 @@ void zmk_widget_line_segments_set_labels(struct zmk_widget_line_segments *widget
     update_label_excluded_cells();
 }
 
-void zmk_widget_line_segments_set_cell_excluded(int col, int row, bool excluded) {
+void zmk_widget_field_line_segments_set_cell_excluded(int col, int row, bool excluded) {
     if (col < 0 || col >= GRID_COLS || row < 0 || row >= GRID_ROWS) {
         return;
     }

@@ -10,6 +10,10 @@ choice ZMK_DISPLAY_STATUS_SCREEN
     default ZMK_DISPLAY_STATUS_SCREEN_CUSTOM
 endchoice
 
+# With swipe navigation, multiple screen trees live in the LVGL heap at once.
+config LV_Z_MEM_POOL_SIZE
+    default 32768 if PROSPECTOR_SWIPE_NAVIGATION
+
 rsource "src/layouts/*/Kconfig.defconfig"
 
 choice ZMK_DISPLAY_WORK_QUEUE

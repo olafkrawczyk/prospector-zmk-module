@@ -1,5 +1,5 @@
 choice PROSPECTOR_STATUS_SCREEN_LAYOUT
-    prompt "Status screen layout"
+    prompt "Default status screen layout (shown at boot)"
     default PROSPECTOR_STATUS_SCREEN_CLASSIC
 
 config PROSPECTOR_STATUS_SCREEN_CLASSIC
@@ -28,6 +28,39 @@ config PROSPECTOR_STATUS_SCREEN_BONGO
         Bongo cat that taps along with typing, with WPM and layer name
 
 endchoice
+
+# Screens to compile in. The default screen chosen above is always enabled;
+# enable additional screens here and switch between them with swipe gestures
+# (requires the touchscreen, see PROSPECTOR_SWIPE_NAVIGATION).
+
+config PROSPECTOR_SCREEN_CLASSIC_ENABLED
+    bool "Compile Classic screen"
+    default y if PROSPECTOR_STATUS_SCREEN_CLASSIC
+
+config PROSPECTOR_SCREEN_RADII_ENABLED
+    bool "Compile Radii screen"
+    default y if PROSPECTOR_STATUS_SCREEN_RADII
+
+config PROSPECTOR_SCREEN_FIELD_ENABLED
+    bool "Compile Field screen"
+    default y if PROSPECTOR_STATUS_SCREEN_FIELD
+
+config PROSPECTOR_SCREEN_OPERATOR_ENABLED
+    bool "Compile Operator screen"
+    default y if PROSPECTOR_STATUS_SCREEN_OPERATOR
+
+config PROSPECTOR_SCREEN_BONGO_ENABLED
+    bool "Compile Bongo Cat screen"
+    default y if PROSPECTOR_STATUS_SCREEN_BONGO
+
+config PROSPECTOR_SWIPE_NAVIGATION
+    bool "Switch between enabled screens with horizontal swipe gestures"
+    default y if DT_HAS_HYNITRON_CST816S_ENABLED
+    select INPUT
+    help
+      When enabled (and the CST816S touchscreen is wired up and enabled in
+      devicetree), swiping left/right anywhere on the screen cycles through
+      all compiled-in status screens with a slide animation.
 
 config PROSPECTOR_ROTATE_DISPLAY_180
     bool "Rotate the display 180 degrees"

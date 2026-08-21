@@ -32,7 +32,7 @@ static void set_modifier_color(lv_obj_t *label, bool active) {
 }
 
 static void modifier_indicator_update_cb(struct modifier_indicator_state state) {
-    struct zmk_widget_modifier_indicator *widget;
+    struct zmk_widget_operator_modifier_indicator *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
         for (int i = 0; i < 4; i++) {
             enum modifier_type type = modifier_order_get(i);
@@ -75,12 +75,12 @@ static struct modifier_indicator_state modifier_indicator_get_state(const zmk_ev
     return state;
 }
 
-ZMK_DISPLAY_WIDGET_LISTENER(widget_modifier_indicator, struct modifier_indicator_state,
+ZMK_DISPLAY_WIDGET_LISTENER(widget_operator_modifier_indicator, struct modifier_indicator_state,
                             modifier_indicator_update_cb, modifier_indicator_get_state)
-ZMK_SUBSCRIPTION(widget_modifier_indicator, zmk_keycode_state_changed);
+ZMK_SUBSCRIPTION(widget_operator_modifier_indicator, zmk_keycode_state_changed);
 
 #ifdef CONFIG_DT_HAS_ZMK_BEHAVIOR_CAPS_WORD_ENABLED
-ZMK_SUBSCRIPTION(widget_modifier_indicator, zmk_caps_word_state_changed);
+ZMK_SUBSCRIPTION(widget_operator_modifier_indicator, zmk_caps_word_state_changed);
 #endif
 
 static lv_obj_t *create_separator(lv_obj_t *parent) {
@@ -102,7 +102,7 @@ static lv_obj_t *create_mod_label(lv_obj_t *parent, const char *text) {
     return label;
 }
 
-int zmk_widget_modifier_indicator_init(struct zmk_widget_modifier_indicator *widget, lv_obj_t *parent) {
+int zmk_widget_operator_modifier_indicator_init(struct zmk_widget_operator_modifier_indicator *widget, lv_obj_t *parent) {
     widget->obj = lv_obj_create(parent);
     lv_obj_set_size(widget->obj, 230, 24);
     lv_obj_set_style_bg_opa(widget->obj, LV_OPA_TRANSP, LV_PART_MAIN);
@@ -120,11 +120,11 @@ int zmk_widget_modifier_indicator_init(struct zmk_widget_modifier_indicator *wid
     }
 
     sys_slist_append(&widgets, &widget->node);
-    widget_modifier_indicator_init();
+    widget_operator_modifier_indicator_init();
 
     return 0;
 }
 
-lv_obj_t *zmk_widget_modifier_indicator_obj(struct zmk_widget_modifier_indicator *widget) {
+lv_obj_t *zmk_widget_operator_modifier_indicator_obj(struct zmk_widget_operator_modifier_indicator *widget) {
     return widget->obj;
 }

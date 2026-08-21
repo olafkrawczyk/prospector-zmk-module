@@ -108,7 +108,7 @@ ZMK_DISPLAY_WIDGET_LISTENER(widget_bongo_layer, struct layer_state, layer_update
                             layer_get_state)
 ZMK_SUBSCRIPTION(widget_bongo_layer, zmk_layer_state_changed);
 
-lv_obj_t *zmk_display_status_screen() {
+lv_obj_t *zmk_prospector_screen_bongo_create() {
     lv_obj_t *screen = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(screen, lv_color_hex(0x000000), LV_PART_MAIN);
     lv_obj_set_style_bg_opa(screen, 255, LV_PART_MAIN);

@@ -90,8 +90,8 @@ static void set_battery_bar_connected(lv_obj_t *widget_obj, struct connection_up
     }
 }
 
-void battery_bar_battery_update_cb(struct battery_update_state state) {
-    struct zmk_widget_battery_bar *widget;
+void classic_battery_bar_battery_update_cb(struct battery_update_state state) {
+    struct zmk_widget_classic_battery_bar *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
         set_battery_bar_value(widget->obj, state, widget->initialized);
     }
@@ -114,8 +114,8 @@ static struct battery_update_state battery_bar_get_battery_state(const zmk_event
     };
 }
 
-void battery_bar_connection_update_cb(struct connection_update_state state) {
-    struct zmk_widget_battery_bar *widget;
+void classic_battery_bar_connection_update_cb(struct connection_update_state state) {
+    struct zmk_widget_classic_battery_bar *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
         set_battery_bar_connected(widget->obj, state, widget->initialized);
     }
@@ -138,15 +138,15 @@ static struct connection_update_state battery_bar_get_connection_state(const zmk
     };
 }
 
-ZMK_DISPLAY_WIDGET_LISTENER(widget_battery_bar_battery, struct battery_update_state,
-                            battery_bar_battery_update_cb, battery_bar_get_battery_state);
-ZMK_SUBSCRIPTION(widget_battery_bar_battery, zmk_peripheral_battery_state_changed);
+ZMK_DISPLAY_WIDGET_LISTENER(widget_classic_battery_bar_battery, struct battery_update_state,
+                            classic_battery_bar_battery_update_cb, battery_bar_get_battery_state);
+ZMK_SUBSCRIPTION(widget_classic_battery_bar_battery, zmk_peripheral_battery_state_changed);
 
-ZMK_DISPLAY_WIDGET_LISTENER(widget_battery_bar_connection, struct connection_update_state,
-                            battery_bar_connection_update_cb, battery_bar_get_connection_state);
-ZMK_SUBSCRIPTION(widget_battery_bar_connection, zmk_split_central_status_changed);
+ZMK_DISPLAY_WIDGET_LISTENER(widget_classic_battery_bar_connection, struct connection_update_state,
+                            classic_battery_bar_connection_update_cb, battery_bar_get_connection_state);
+ZMK_SUBSCRIPTION(widget_classic_battery_bar_connection, zmk_split_central_status_changed);
 
-int zmk_widget_battery_bar_init(struct zmk_widget_battery_bar *widget, lv_obj_t *parent) {
+int zmk_widget_classic_battery_bar_init(struct zmk_widget_classic_battery_bar *widget, lv_obj_t *parent) {
     widget->obj = lv_obj_create(parent);
     lv_obj_set_width(widget->obj, lv_pct(100));
     lv_obj_set_flex_flow(widget->obj, LV_FLEX_FLOW_ROW);
@@ -204,20 +204,20 @@ int zmk_widget_battery_bar_init(struct zmk_widget_battery_bar *widget, lv_obj_t 
 
     sys_slist_append(&widgets, &widget->node);
     widget->initialized = true;
-    widget_battery_bar_connection_init();
-    widget_battery_bar_battery_init();
+    widget_classic_battery_bar_connection_init();
+    widget_classic_battery_bar_battery_init();
 
     return 0;
 }
 
-lv_obj_t *zmk_widget_battery_bar_obj(struct zmk_widget_battery_bar *widget) { return widget->obj; }
+lv_obj_t *zmk_widget_classic_battery_bar_obj(struct zmk_widget_classic_battery_bar *widget) { return widget->obj; }
 
 static void set_battery_bar_width(void *obj, int32_t width) {
     lv_obj_set_width(obj, width);
 }
 
-void zmk_widget_battery_bar_set_compact(bool compact) {
-    struct zmk_widget_battery_bar *widget;
+void zmk_widget_classic_battery_bar_set_compact(bool compact) {
+    struct zmk_widget_classic_battery_bar *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
         lv_anim_t a;
         lv_anim_init(&a);

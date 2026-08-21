@@ -61,7 +61,7 @@ static void set_slot_active(lv_obj_t *slot, bool active) {
     }
 }
 
-static void update_output_widget(struct zmk_widget_output *widget) {
+static void update_output_widget(struct zmk_widget_operator_output *widget) {
     bool is_usb = (active_transport == ZMK_TRANSPORT_USB);
     set_usb_btn_state(widget->usb_btn, is_usb);
     set_ble_btn_state(widget->ble_btn, !is_usb);
@@ -77,7 +77,7 @@ static int endpoint_changed_listener(const zmk_event_t *eh) {
         struct zmk_endpoint_instance selected = zmk_endpoint_get_selected();
         active_transport = selected.transport;
 
-        struct zmk_widget_output *widget;
+        struct zmk_widget_operator_output *widget;
         SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
             update_output_widget(widget);
         }
@@ -90,7 +90,7 @@ static int ble_active_profile_changed_listener(const zmk_event_t *eh) {
     if (event) {
         active_profile_index = event->index;
 
-        struct zmk_widget_output *widget;
+        struct zmk_widget_operator_output *widget;
         SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
             update_output_widget(widget);
         }
@@ -143,7 +143,7 @@ static lv_obj_t *create_slot_btn(lv_obj_t *parent, int index, int x, int width, 
     return slot;
 }
 
-int zmk_widget_output_init(struct zmk_widget_output *widget, lv_obj_t *parent) {
+int zmk_widget_operator_output_init(struct zmk_widget_operator_output *widget, lv_obj_t *parent) {
     widget->obj = lv_obj_create(parent);
     lv_obj_set_size(widget->obj, 116, 62);
     lv_obj_set_style_bg_opa(widget->obj, LV_OPA_TRANSP, LV_PART_MAIN);
@@ -175,6 +175,6 @@ int zmk_widget_output_init(struct zmk_widget_output *widget, lv_obj_t *parent) {
     return 0;
 }
 
-lv_obj_t *zmk_widget_output_obj(struct zmk_widget_output *widget) {
+lv_obj_t *zmk_widget_operator_output_obj(struct zmk_widget_operator_output *widget) {
     return widget->obj;
 }

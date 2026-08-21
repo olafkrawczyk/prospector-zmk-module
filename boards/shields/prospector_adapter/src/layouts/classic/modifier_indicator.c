@@ -79,7 +79,7 @@ static lv_obj_t *create_win_icon(lv_obj_t *parent) {
 }
 
 static void modifier_update_cb(struct modifier_state state) {
-    struct zmk_widget_modifier_indicator *widget;
+    struct zmk_widget_classic_modifier_indicator *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
 #ifdef CONFIG_PROSPECTOR_SHOW_MODIFIERS
         bool is_windows = modifier_order_is_windows();
@@ -140,18 +140,18 @@ static struct modifier_state modifier_indicator_get_state(const zmk_event_t *eh)
     return state;
 }
 
-ZMK_DISPLAY_WIDGET_LISTENER(widget_modifier_indicator, struct modifier_state,
+ZMK_DISPLAY_WIDGET_LISTENER(widget_classic_modifier_indicator, struct modifier_state,
                             modifier_update_cb, modifier_indicator_get_state)
 
 #ifdef CONFIG_PROSPECTOR_SHOW_MODIFIERS
-ZMK_SUBSCRIPTION(widget_modifier_indicator, zmk_keycode_state_changed);
+ZMK_SUBSCRIPTION(widget_classic_modifier_indicator, zmk_keycode_state_changed);
 #endif
 
 #ifdef CONFIG_DT_HAS_ZMK_BEHAVIOR_CAPS_WORD_ENABLED
-ZMK_SUBSCRIPTION(widget_modifier_indicator, zmk_caps_word_state_changed);
+ZMK_SUBSCRIPTION(widget_classic_modifier_indicator, zmk_caps_word_state_changed);
 #endif
 
-int zmk_widget_modifier_indicator_init(struct zmk_widget_modifier_indicator *widget,
+int zmk_widget_classic_modifier_indicator_init(struct zmk_widget_classic_modifier_indicator *widget,
                                         lv_obj_t *parent) {
     widget->obj = lv_obj_create(parent);
     lv_obj_set_size(widget->obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
@@ -190,11 +190,11 @@ int zmk_widget_modifier_indicator_init(struct zmk_widget_modifier_indicator *wid
 
     sys_slist_append(&widgets, &widget->node);
 
-    widget_modifier_indicator_init();
+    widget_classic_modifier_indicator_init();
 
     return 0;
 }
 
-lv_obj_t *zmk_widget_modifier_indicator_obj(struct zmk_widget_modifier_indicator *widget) {
+lv_obj_t *zmk_widget_classic_modifier_indicator_obj(struct zmk_widget_classic_modifier_indicator *widget) {
     return widget->obj;
 }
