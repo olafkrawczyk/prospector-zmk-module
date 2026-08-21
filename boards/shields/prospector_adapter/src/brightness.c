@@ -8,12 +8,32 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(als, 4);
 
+#include <prospector_brightness.h>
+
 static const struct device *pwm_leds_dev = DEVICE_DT_GET_ONE(pwm_leds);
 #define DISP_BL DT_NODE_CHILD_IDX(DT_NODELABEL(disp_bl))
 
+static uint8_t current_brightness =
 #ifdef CONFIG_PROSPECTOR_USE_AMBIENT_LIGHT_SENSOR
+    100
+#else
+    CONFIG_PROSPECTOR_FIXED_BRIGHTNESS
+#endif
+    ;
 
-static uint8_t current_brightness = 100;
+uint8_t prospector_brightness_step(int8_t delta) {
+    int16_t b = (int16_t)current_brightness + delta;
+    if (b < 1) {
+        b = 1;
+    } else if (b > 100) {
+        b = 100;
+    }
+    current_brightness = (uint8_t)b;
+    led_set_brightness(pwm_leds_dev, DISP_BL, current_brightness);
+    return current_brightness;
+}
+
+#ifdef CONFIG_PROSPECTOR_USE_AMBIENT_LIGHT_SENSOR
 
 #define SENSOR_MIN      0       // Minimum sensor reading
 #define SENSOR_MAX      100   // Maximum sensor reading
@@ -148,7 +168,7 @@ K_THREAD_DEFINE(als_tid, 1024, als_thread, NULL, NULL, NULL, K_LOWEST_APPLICATIO
 #else
 
 static int init_fixed_brightness(void) {
-    led_set_brightness(pwm_leds_dev, DISP_BL, CONFIG_PROSPECTOR_FIXED_BRIGHTNESS);
+    led_set_brightness(pwm_leds_dev, DISP_BL, current_brightness);
 
     return 0;
 }

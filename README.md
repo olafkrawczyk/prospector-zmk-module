@@ -103,12 +103,14 @@ Then define the touch nodes in your dongle's `.overlay`:
     lvgl_pointer_input: lvgl_pointer_input {
         compatible = "zephyr,lvgl-pointer-input";
         input = <&cst816s>;
+        /* The CST816S frame is rotated 180° vs the display in the standard
+         * Prospector mounting; uncomment if your axes are inverted:
+        invert-x;
+        invert-y;
+        */
     };
 };
 ```
-
-(If your display is mounted/rotated differently, add `invert-x;` / `invert-y;`
-/ `swap-xy;` to the `lvgl_pointer_input` node.)
 
 and compile in the screens you want to swipe between (the boot screen chosen
 above is always enabled):
@@ -117,9 +119,15 @@ above is always enabled):
 CONFIG_PROSPECTOR_SCREEN_OPERATOR_ENABLED=y
 ```
 
-Swipe left/right anywhere on the screen to cycle through the compiled screens
-with a slide animation. With multiple screens enabled the LVGL heap is raised
-to 32K automatically; if you hit a RAM overflow, also add
+Gestures (anywhere on the screen — widgets are inert, no click/scroll):
+
+| Swipe     | Action                                      |
+| --------- | ------------------------------------------- |
+| left/right| cycle through compiled screens (slide anim) |
+| up/down   | raise/lower brightness (10% steps)          |
+
+With multiple screens enabled the LVGL heap is raised to 32K automatically; if
+you hit a RAM overflow, also add
 `CONFIG_LV_Z_VDB_SIZE=25`. To disable swipe (single screen, smaller heap):
 `CONFIG_PROSPECTOR_SWIPE_NAVIGATION=n`.
 

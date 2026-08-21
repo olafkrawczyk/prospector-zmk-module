@@ -54,13 +54,17 @@ config PROSPECTOR_SCREEN_BONGO_ENABLED
     default y if PROSPECTOR_STATUS_SCREEN_BONGO
 
 config PROSPECTOR_SWIPE_NAVIGATION
-    bool "Switch between enabled screens with horizontal swipe gestures"
+    bool "Touchscreen gestures: swipe to switch screens and adjust brightness"
     default y if DT_HAS_HYNITRON_CST816S_ENABLED
     select INPUT
     help
       When enabled (and the CST816S touchscreen is wired up and enabled in
-      devicetree), swiping left/right anywhere on the screen cycles through
-      all compiled-in status screens with a slide animation.
+      devicetree), swipe gestures work anywhere on the screen:
+      - left/right : cycle through compiled-in status screens (slide anim)
+      - up/down    : raise/lower display brightness (10% steps)
+
+      All widgets are treated as inert (no click/scroll) — touches only
+      produce gestures.
 
 config PROSPECTOR_ROTATE_DISPLAY_180
     bool "Rotate the display 180 degrees"

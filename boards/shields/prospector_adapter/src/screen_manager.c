@@ -1,7 +1,12 @@
 /*
  * Screen manager: creates the enabled status screen layouts and, with
- * CONFIG_PROSPECTOR_SWIPE_NAVIGATION, switches between them on horizontal
- * swipe gestures from the touchscreen (LVGL pointer gestures).
+ * CONFIG_PROSPECTOR_SWIPE_NAVIGATION, reacts to touchscreen gestures:
+ *   - swipe left/right  : cycle between enabled screens (slide animation)
+ *   - swipe up/down     : raise/lower display brightness
+ *
+ * Widgets are treated as inert (no click/scroll): all LV_OBJ_FLAG_CLICKABLE
+ * and LV_OBJ_FLAG_SCROLLABLE flags are stripped from descendants so touches
+ * only produce gestures, never widget interaction.
  */
 
 #include <lvgl.h>
@@ -9,6 +14,7 @@
 #include <zephyr/kernel.h>
 
 #include <zmk/display/status_screen.h>
+#include <prospector_brightness.h>
 
 #if IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_CLASSIC_ENABLED)
 lv_obj_t *zmk_prospector_screen_classic_create(void);
@@ -53,9 +59,14 @@ lv_obj_t *zmk_prospector_screen_bongo_create(void);
      IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_OPERATOR_ENABLED) +                                       \
      IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_BONGO_ENABLED))
 
-#if IS_ENABLED(CONFIG_PROSPECTOR_SWIPE_NAVIGATION) && (N_ENABLED > 1)
-#define SWIPE_NAV_ACTIVE 1
+#if IS_ENABLED(CONFIG_PROSPECTOR_SWIPE_NAVIGATION)
+#define TOUCH_GESTURES_ACTIVE 1
+#if (N_ENABLED > 1)
+#define MULTI_SCREEN 1
 #endif
+#endif
+
+#define BRIGHTNESS_STEP 10
 
 struct screen_entry {
     lv_obj_t *(*create)(void);
@@ -101,52 +112,60 @@ static uint8_t default_screen_index(void) {
     return idx;
 }
 
-#ifdef SWIPE_NAV_ACTIVE
+#ifdef TOUCH_GESTURES_ACTIVE
 
 static uint8_t current_screen;
 
 static void gesture_event_cb(lv_event_t *e) {
     (void)e;
     lv_dir_t dir = lv_indev_get_gesture_dir(lv_indev_active());
-    uint8_t next = current_screen;
-    lv_screen_load_anim_t anim;
 
-    if (dir == LV_DIR_LEFT) {
-        next = (current_screen + 1) % N_ENABLED;
-        anim = LV_SCR_LOAD_ANIM_MOVE_LEFT;
-    } else if (dir == LV_DIR_RIGHT) {
-        next = (current_screen + N_ENABLED - 1) % N_ENABLED;
-        anim = LV_SCR_LOAD_ANIM_MOVE_RIGHT;
-    } else {
-        return;
+    switch (dir) {
+#ifdef MULTI_SCREEN
+    case LV_DIR_LEFT:
+        current_screen = (current_screen + 1) % N_ENABLED;
+        lv_screen_load_anim(screens[current_screen].obj, LV_SCR_LOAD_ANIM_MOVE_LEFT, 250, 0, false);
+        break;
+    case LV_DIR_RIGHT:
+        current_screen = (current_screen + N_ENABLED - 1) % N_ENABLED;
+        lv_screen_load_anim(screens[current_screen].obj, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 250, 0, false);
+        break;
+#endif
+    case LV_DIR_TOP:
+        prospector_brightness_step(BRIGHTNESS_STEP);
+        break;
+    case LV_DIR_BOTTOM:
+        prospector_brightness_step(-BRIGHTNESS_STEP);
+        break;
+    default:
+        break;
     }
-
-    current_screen = next;
-    lv_screen_load_anim(screens[next].obj, anim, 250, 0, false);
 }
 
-/* Gesture events are delivered to the pressed object and bubble up only
- * through objects carrying LV_OBJ_FLAG_GESTURE_BUBBLE. Flag every descendant
- * (but not the screen root itself, or the event would bubble past it into
- * nowhere) so a swipe lands on the screen's handler regardless of which
- * widget was touched. */
-static void add_gesture_bubble_recursive(lv_obj_t *obj) {
+/* Strip click/scroll flags so widgets are inert to touch (treated as images).
+ * The screen root keeps CLICKABLE so it is the pointer hit-target that feeds
+ * gesture detection; GESTURE_BUBBLE lets events from any child reach it. */
+static void make_inert_recursive(lv_obj_t *obj) {
+    lv_obj_remove_flag(obj, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_add_flag(obj, LV_OBJ_FLAG_GESTURE_BUBBLE);
+    lv_obj_remove_flag(obj, LV_OBJ_FLAG_SCROLL_CHAIN_VER | LV_OBJ_FLAG_SCROLL_CHAIN_HOR);
     uint32_t child_count = lv_obj_get_child_count(obj);
     for (uint32_t i = 0; i < child_count; i++) {
-        add_gesture_bubble_recursive(lv_obj_get_child(obj, i));
+        make_inert_recursive(lv_obj_get_child(obj, i));
     }
 }
 
 static void attach_gesture_handler(lv_obj_t *screen) {
     lv_obj_add_event_cb(screen, gesture_event_cb, LV_EVENT_GESTURE, NULL);
+    /* Root stays clickable (hit-target), but not scrollable. */
+    lv_obj_remove_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
     uint32_t child_count = lv_obj_get_child_count(screen);
     for (uint32_t i = 0; i < child_count; i++) {
-        add_gesture_bubble_recursive(lv_obj_get_child(screen, i));
+        make_inert_recursive(lv_obj_get_child(screen, i));
     }
 }
 
-#endif /* SWIPE_NAV_ACTIVE */
+#endif /* TOUCH_GESTURES_ACTIVE */
 
 lv_obj_t *zmk_display_status_screen(void) {
     uint8_t default_idx = default_screen_index();
@@ -156,7 +175,7 @@ lv_obj_t *zmk_display_status_screen(void) {
         default_idx = 0;
     }
 
-#ifdef SWIPE_NAV_ACTIVE
+#ifdef TOUCH_GESTURES_ACTIVE
     for (uint8_t i = 0; i < N_ENABLED; i++) {
         screens[i].obj = screens[i].create();
         attach_gesture_handler(screens[i].obj);
