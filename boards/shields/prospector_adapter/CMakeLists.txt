@@ -19,7 +19,7 @@ if(CONFIG_SHIELD_PROSPECTOR_ADAPTER)
 
   # Every enabled layout is compiled in; the screen manager picks the default
   # one at boot and (with PROSPECTOR_SWIPE_NAVIGATION) switches on swipes.
-  foreach(layout classic radii field operator bongo)
+  foreach(layout classic radii field operator bongo pomodoro)
     string(TOUPPER ${layout} LAYOUT_UPPER)
     if(CONFIG_PROSPECTOR_SCREEN_${LAYOUT_UPPER}_ENABLED)
       file(GLOB layout_sources src/layouts/${layout}/*.c)

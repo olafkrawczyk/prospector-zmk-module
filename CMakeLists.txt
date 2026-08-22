@@ -18,4 +18,13 @@ if(CONFIG_SHIELD_PROSPECTOR_ADAPTER)
         zephyr_library_sources(src/events/split_central_status_changed.c)
         zephyr_library_sources(src/split/bluetooth/central_status_changed_observer.c)
 
+        if(CONFIG_PROSPECTOR_POMODORO)
+                zephyr_library_sources(src/events/pomodoro_state_changed.c)
+                zephyr_library_sources(src/pomodoro/pomodoro.c)
+
+                if(CONFIG_DT_HAS_ZMK_BEHAVIOR_POMODORO_ENABLED)
+                        target_sources(app PRIVATE src/behaviors/behavior_pomodoro.c)
+                endif()
+        endif()
+
 endif()

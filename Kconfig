@@ -57,6 +57,22 @@ config PROSPECTOR_SCREEN_BONGO_ENABLED
     default y if PROSPECTOR_STATUS_SCREEN_BONGO
     depends on PROSPECTOR_TOUCHSCREEN
 
+config PROSPECTOR_SCREEN_POMODORO_ENABLED
+    bool "Compile Pomodoro screen"
+    depends on PROSPECTOR_TOUCHSCREEN
+    depends on PROSPECTOR_POMODORO
+    help
+      Clean countdown screen (work/break timer) rendered from the pomodoro
+      service state. Swipe destination only — requires the touchscreen.
+
+config PROSPECTOR_POMODORO
+    bool "Pomodoro timer (state machine + keymap behaviors)"
+    default y if DT_HAS_ZMK_BEHAVIOR_POMODORO_ENABLED
+    help
+      Enables the 1 Hz pomodoro state machine and the &pomodoro behavior
+      driver. Two fixed interval presets: 25/5 and 50/10. Define
+      zmk,behavior-pomodoro nodes in your keymap to control it.
+
 config PROSPECTOR_TOUCHSCREEN
     bool "Enable touchscreen support (CST816S)"
     default n

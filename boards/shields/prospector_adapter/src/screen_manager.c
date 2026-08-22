@@ -31,6 +31,9 @@ lv_obj_t *zmk_prospector_screen_operator_create(void);
 #if IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_BONGO_ENABLED)
 lv_obj_t *zmk_prospector_screen_bongo_create(void);
 #endif
+#if IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_POMODORO_ENABLED)
+lv_obj_t *zmk_prospector_screen_pomodoro_create(void);
+#endif
 
 /* Fixed IDs matching the layout order in screens[] below. */
 #define SCREEN_ID_CLASSIC 0
@@ -38,6 +41,7 @@ lv_obj_t *zmk_prospector_screen_bongo_create(void);
 #define SCREEN_ID_FIELD 2
 #define SCREEN_ID_OPERATOR 3
 #define SCREEN_ID_BONGO 4
+#define SCREEN_ID_POMODORO 5
 
 /* Boot screen, from the PROSPECTOR_STATUS_SCREEN_* choice. */
 #if defined(CONFIG_PROSPECTOR_STATUS_SCREEN_CLASSIC)
@@ -57,7 +61,8 @@ lv_obj_t *zmk_prospector_screen_bongo_create(void);
      IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_RADII_ENABLED) +                                          \
      IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_FIELD_ENABLED) +                                          \
      IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_OPERATOR_ENABLED) +                                       \
-     IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_BONGO_ENABLED))
+     IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_BONGO_ENABLED) +                                          \
+     IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_POMODORO_ENABLED))
 
 #if IS_ENABLED(CONFIG_PROSPECTOR_TOUCHSCREEN)
 #define TOUCH_ACTIVE 1
@@ -89,6 +94,9 @@ static struct screen_entry screens[] = {
 #endif
 #if IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_BONGO_ENABLED)
     {.create = zmk_prospector_screen_bongo_create},
+#endif
+#if IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_POMODORO_ENABLED)
+    {.create = zmk_prospector_screen_pomodoro_create},
 #endif
 };
 
@@ -167,6 +175,57 @@ static void attach_gesture_handler(lv_obj_t *screen) {
 
 #endif /* TOUCH_ACTIVE */
 
+#if IS_ENABLED(CONFIG_PROSPECTOR_POMODORO)
+
+#include <zmk/pomodoro.h>
+#include <zmk/events/pomodoro_state_changed.h>
+
+/* Index of the pomodoro screen inside the compacted screens[] table:
+ * count of compiled-in screens that come before it (all non-pomodoro). */
+#define POMODORO_SCREEN_INDEX                                                                      \
+    (IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_CLASSIC_ENABLED) +                                        \
+     IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_RADII_ENABLED) +                                          \
+     IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_FIELD_ENABLED) +                                          \
+     IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_OPERATOR_ENABLED) +                                       \
+     IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_BONGO_ENABLED))
+
+static void pomodoro_ui_cb(struct zmk_pomodoro_state_changed st) {
+    /* Only react to phase-end transitions (work -> pause, pause -> idle). */
+    if (st.transition != ZMK_POMODORO_TRANSITION_WORK_ENDED &&
+        st.transition != ZMK_POMODORO_TRANSITION_PAUSE_ENDED) {
+        return;
+    }
+
+    prospector_brightness_blink(3);
+
+#if defined(TOUCH_ACTIVE) && IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_POMODORO_ENABLED)
+    if (current_screen != POMODORO_SCREEN_INDEX) {
+        current_screen = POMODORO_SCREEN_INDEX;
+        lv_screen_load_anim(screens[current_screen].obj, LV_SCR_LOAD_ANIM_FADE_IN, 250, 0, false);
+    }
+#endif
+}
+
+static struct zmk_pomodoro_state_changed pomodoro_ui_from_event(const zmk_event_t *eh) {
+    const struct zmk_pomodoro_state_changed *ev = as_zmk_pomodoro_state_changed(eh);
+    if (ev == NULL) {
+        struct zmk_pomodoro_snapshot snap = zmk_pomodoro_get_snapshot();
+        return (struct zmk_pomodoro_state_changed){
+            .state = snap.state,
+            .transition = ZMK_POMODORO_TRANSITION_TICK,
+            .preset = snap.preset,
+            .remaining_sec = snap.remaining_sec,
+        };
+    }
+    return *ev;
+}
+
+ZMK_DISPLAY_WIDGET_LISTENER(pomodoro_ui, struct zmk_pomodoro_state_changed, pomodoro_ui_cb,
+                            pomodoro_ui_from_event)
+ZMK_SUBSCRIPTION(pomodoro_ui, zmk_pomodoro_state_changed);
+
+#endif /* CONFIG_PROSPECTOR_POMODORO */
+
 lv_obj_t *zmk_display_status_screen(void) {
     uint8_t default_idx = default_screen_index();
 
@@ -184,6 +243,11 @@ lv_obj_t *zmk_display_status_screen(void) {
 #else
     /* Single screen or no touch: keep heap usage as before. */
     screens[default_idx].obj = screens[default_idx].create();
+#endif
+
+#if IS_ENABLED(CONFIG_PROSPECTOR_POMODORO)
+    /* Prime the pomodoro UI listener (blink + auto-switch on phase end). */
+    pomodoro_ui_init();
 #endif
 
     return screens[default_idx].obj;

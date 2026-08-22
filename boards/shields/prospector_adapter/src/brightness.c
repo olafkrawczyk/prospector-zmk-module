@@ -43,6 +43,58 @@ uint8_t prospector_brightness_step(int8_t delta) {
     return (uint8_t)b;
 }
 
+uint8_t prospector_brightness_get(void) {
+    return (uint8_t)atomic_get(&current_brightness);
+}
+
+/* --- Backlight blink (pomodoro end-of-phase attention cue) --- */
+
+static struct k_work_delayable blink_work;
+static uint8_t blink_toggles_left;
+static uint8_t blink_saved_brightness;
+static atomic_t blink_active = ATOMIC_INIT(0);
+
+static void blink_handler(struct k_work *work) {
+    ARG_UNUSED(work);
+
+    if (blink_toggles_left == 0) {
+        led_set_brightness(pwm_leds_dev, DISP_BL, blink_saved_brightness);
+        atomic_set(&current_brightness, (atomic_val_t)blink_saved_brightness);
+        atomic_set(&blink_active, 0);
+        return;
+    }
+
+    /* Alternate between the saved brightness and a dim level. */
+    uint8_t target = (blink_toggles_left % 2 == 0) ? blink_saved_brightness : 3;
+    led_set_brightness(pwm_leds_dev, DISP_BL, target);
+
+    blink_toggles_left--;
+    if (blink_toggles_left > 0) {
+        k_work_reschedule(&blink_work, K_MSEC(180));
+    } else {
+        led_set_brightness(pwm_leds_dev, DISP_BL, blink_saved_brightness);
+        atomic_set(&current_brightness, (atomic_val_t)blink_saved_brightness);
+        atomic_set(&blink_active, 0);
+    }
+}
+
+void prospector_brightness_blink(uint8_t times) {
+    if (atomic_set(&blink_active, 1) != 0) {
+        /* A blink is already running; don't stack. */
+        return;
+    }
+    blink_saved_brightness = (uint8_t)atomic_get(&current_brightness);
+    blink_toggles_left = (uint8_t)(times * 2);
+    k_work_reschedule(&blink_work, K_NO_WAIT);
+}
+
+static int blink_init(const struct device *dev) {
+    ARG_UNUSED(dev);
+    k_work_init_delayable(&blink_work, blink_handler);
+    return 0;
+}
+SYS_INIT(blink_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);
+
 #ifdef CONFIG_PROSPECTOR_USE_AMBIENT_LIGHT_SENSOR
 
 #define SENSOR_MIN      0       // Minimum sensor reading

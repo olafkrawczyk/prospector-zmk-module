@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: MIT
+
+description: Pomodoro timer control behavior
+
+compatible: "zmk,behavior-pomodoro"
+
+include: zero_param.yaml
+
+properties:
+  action:
+    type: int
+    default: 0
+    enum: [0, 1]
+    description: |
+      0 = start/stop toggle (begin the work phase, or stop and return to idle).
+      1 = cycle the interval preset (25/5 <-> 50/10), idle only.
