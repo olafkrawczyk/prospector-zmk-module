@@ -190,7 +190,7 @@ static void attach_gesture_handler(lv_obj_t *screen) {
      IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_OPERATOR_ENABLED) +                                       \
      IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_BONGO_ENABLED))
 
-static void pomodoro_ui_cb(struct zmk_pomodoro_state_changed st) {
+static void pomodoro_ui_update_cb(struct zmk_pomodoro_state_changed st) {
     /* Only react to phase-end transitions (work -> pause, pause -> idle). */
     if (st.transition != ZMK_POMODORO_TRANSITION_WORK_ENDED &&
         st.transition != ZMK_POMODORO_TRANSITION_PAUSE_ENDED) {
@@ -221,7 +221,7 @@ static struct zmk_pomodoro_state_changed pomodoro_ui_from_event(const zmk_event_
     return *ev;
 }
 
-ZMK_DISPLAY_WIDGET_LISTENER(pomodoro_ui, struct zmk_pomodoro_state_changed, pomodoro_ui_cb,
+ZMK_DISPLAY_WIDGET_LISTENER(pomodoro_ui, struct zmk_pomodoro_state_changed, pomodoro_ui_update_cb,
                             pomodoro_ui_from_event)
 ZMK_SUBSCRIPTION(pomodoro_ui, zmk_pomodoro_state_changed);
 
