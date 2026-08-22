@@ -177,6 +177,7 @@ static void attach_gesture_handler(lv_obj_t *screen) {
 
 #if IS_ENABLED(CONFIG_PROSPECTOR_POMODORO)
 
+#include <zmk/display.h>
 #include <zmk/pomodoro.h>
 #include <zmk/events/pomodoro_state_changed.h>
 
