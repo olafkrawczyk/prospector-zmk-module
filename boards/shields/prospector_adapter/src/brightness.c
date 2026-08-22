@@ -4,6 +4,7 @@
 #include <zephyr/drivers/pwm.h>
 #include <zephyr/drivers/led.h>
 #include <zephyr/sys/printk.h>
+#include <zephyr/sys/atomic.h>
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(als, 4);
@@ -13,7 +14,14 @@ LOG_MODULE_REGISTER(als, 4);
 static const struct device *pwm_leds_dev = DEVICE_DT_GET_ONE(pwm_leds);
 #define DISP_BL DT_NODE_CHILD_IDX(DT_NODELABEL(disp_bl))
 
-static uint8_t current_brightness =
+/*
+ * current_brightness is accessed from both the ALS thread (when the ambient
+ * light sensor is populated) and the display work queue (via swipe-gesture
+ * brightness control when PROSPECTOR_TOUCHSCREEN is enabled). Use atomic_t
+ * so individual reads and writes are race-free; last writer wins, which is
+ * acceptable for a non-critical display setting.
+ */
+static atomic_t current_brightness =
 #ifdef CONFIG_PROSPECTOR_USE_AMBIENT_LIGHT_SENSOR
     100
 #else
@@ -22,15 +30,17 @@ static uint8_t current_brightness =
     ;
 
 uint8_t prospector_brightness_step(int8_t delta) {
-    int16_t b = (int16_t)current_brightness + delta;
+    int16_t b = (int16_t)atomic_get(&current_brightness) + delta;
     if (b < 1) {
         b = 1;
     } else if (b > 100) {
         b = 100;
     }
-    current_brightness = (uint8_t)b;
-    led_set_brightness(pwm_leds_dev, DISP_BL, current_brightness);
-    return current_brightness;
+    atomic_set(&current_brightness, (atomic_val_t)b);
+    if (led_set_brightness(pwm_leds_dev, DISP_BL, (uint8_t)b)) {
+        LOG_ERR("Failed to set brightness");
+    }
+    return (uint8_t)b;
 }
 
 #ifdef CONFIG_PROSPECTOR_USE_AMBIENT_LIGHT_SENSOR
@@ -73,23 +83,23 @@ uint8_t map_light_to_pwm(int32_t sensor_reading) {
 
 uint8_t bl_fade(uint8_t source, uint8_t target) {
     bool increasing = target > source;
+    int b = source;
 
-    while ((increasing && current_brightness < target) ||
-           (!increasing && current_brightness > target)) {
-
-        if (led_set_brightness(pwm_leds_dev, DISP_BL, current_brightness)) {
+    while ((increasing && b < target) || (!increasing && b > target)) {
+        if (led_set_brightness(pwm_leds_dev, DISP_BL, (uint8_t)b)) {
             LOG_ERR("Failed to set brightness");
         }
 
-        current_brightness += increasing ? FADE_STEP : -FADE_STEP;
+        b += increasing ? FADE_STEP : -FADE_STEP;
 
         // Ensure we don't overshoot bounds
-        if (current_brightness > 100) {
-            current_brightness = 100;
-        } else if (current_brightness < 0) {
-            current_brightness = 0;
+        if (b > 100) {
+            b = 100;
+        } else if (b < 0) {
+            b = 0;
         }
 
+        atomic_set(&current_brightness, (atomic_val_t)b);
         k_msleep(increasing ? FADE_SLEEP_BRIGHTEN_MS : FADE_SLEEP_DARKEN_MS);
     }
 
@@ -110,12 +120,9 @@ extern void als_thread(void *d0, void *d1, void *d2) {
         printk("sensor: device not ready.\n");
     }
 
-    // led_set_brightness(pwm_leds_dev, DISP_BL, 100);
-
     while (1) {
 
         k_msleep(NORMAL_SAMPLE_SLEEP_MS);
-
 
         if (sensor_sample_fetch(dev)) {
             LOG_ERR("sensor_sample fetch failed\n");
@@ -125,12 +132,9 @@ extern void als_thread(void *d0, void *d1, void *d2) {
             LOG_ERR("Cannot read ALS data.\n");
         }
 
-        // LOG_INF("ambient light intensity %d", intensity.val1);
-
         mapped_brightness = map_light_to_pwm(intensity.val1);
-        // LOG_INF("NORMAL: mapped PWM duty cycle %d\n", mapped_brightness);
 
-        if (abs(mapped_brightness - current_brightness) > FADE_THRESHOLD) {
+        if (abs(mapped_brightness - atomic_get(&current_brightness)) > FADE_THRESHOLD) {
             uint8_t integrator = 0;
 
             for (int i = 0; i < BURST_SAMPLE_TIMEOUT; i++) {
@@ -144,21 +148,17 @@ extern void als_thread(void *d0, void *d1, void *d2) {
                 }
 
                 mapped_brightness = map_light_to_pwm(intensity.val1);
-                // LOG_INF("BURST: mapped PWM duty cycle %d\n", mapped_brightness);
 
-                if (abs(mapped_brightness - current_brightness) > FADE_THRESHOLD) {
+                if (abs(mapped_brightness - atomic_get(&current_brightness)) > FADE_THRESHOLD) {
                     integrator++;
-                    // printk("integrator at: %d", integrator);
                     if (integrator >= BURST_SAMPLE_CONSECUTIVE) {
-                        bl_fade(current_brightness, mapped_brightness);
-                        current_brightness = mapped_brightness;
-                        // LOG_INF("SETTING NEW BRIGHTNESS: %d", mapped_brightness);
+                        bl_fade((uint8_t)atomic_get(&current_brightness), mapped_brightness);
+                        atomic_set(&current_brightness, (atomic_val_t)mapped_brightness);
                         break;
                     }
                 }
             }
         }
-        // led_set_brightness(pwm_leds_dev, DISP_BL, map_light_to_pwm(intensity.val1));
     }
 }
 
@@ -168,7 +168,7 @@ K_THREAD_DEFINE(als_tid, 1024, als_thread, NULL, NULL, NULL, K_LOWEST_APPLICATIO
 #else
 
 static int init_fixed_brightness(void) {
-    led_set_brightness(pwm_leds_dev, DISP_BL, current_brightness);
+    led_set_brightness(pwm_leds_dev, DISP_BL, (uint8_t)atomic_get(&current_brightness));
 
     return 0;
 }

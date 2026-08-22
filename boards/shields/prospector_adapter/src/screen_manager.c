@@ -1,6 +1,6 @@
 /*
  * Screen manager: creates the enabled status screen layouts and, with
- * CONFIG_PROSPECTOR_SWIPE_NAVIGATION, reacts to touchscreen gestures:
+ * CONFIG_PROSPECTOR_TOUCHSCREEN, reacts to touchscreen gestures:
  *   - swipe left/right  : cycle between enabled screens (slide animation)
  *   - swipe up/down     : raise/lower display brightness
  *
@@ -59,8 +59,8 @@ lv_obj_t *zmk_prospector_screen_bongo_create(void);
      IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_OPERATOR_ENABLED) +                                       \
      IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_BONGO_ENABLED))
 
-#if IS_ENABLED(CONFIG_PROSPECTOR_SWIPE_NAVIGATION)
-#define TOUCH_GESTURES_ACTIVE 1
+#if IS_ENABLED(CONFIG_PROSPECTOR_TOUCHSCREEN)
+#define TOUCH_ACTIVE 1
 #if (N_ENABLED > 1)
 #define MULTI_SCREEN 1
 #endif
@@ -112,7 +112,7 @@ static uint8_t default_screen_index(void) {
     return idx;
 }
 
-#ifdef TOUCH_GESTURES_ACTIVE
+#ifdef TOUCH_ACTIVE
 
 static uint8_t current_screen;
 
@@ -165,7 +165,7 @@ static void attach_gesture_handler(lv_obj_t *screen) {
     }
 }
 
-#endif /* TOUCH_GESTURES_ACTIVE */
+#endif /* TOUCH_ACTIVE */
 
 lv_obj_t *zmk_display_status_screen(void) {
     uint8_t default_idx = default_screen_index();
@@ -175,7 +175,7 @@ lv_obj_t *zmk_display_status_screen(void) {
         default_idx = 0;
     }
 
-#ifdef TOUCH_GESTURES_ACTIVE
+#ifdef TOUCH_ACTIVE
     for (uint8_t i = 0; i < N_ENABLED; i++) {
         screens[i].obj = screens[i].create();
         attach_gesture_handler(screens[i].obj);

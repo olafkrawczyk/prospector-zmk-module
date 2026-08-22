@@ -12,6 +12,7 @@ This is a [ZMK module](https://zmk.dev/docs/features/modules) that provides cust
 - [Features](#features)
 - [Installation](#installation)
 - [Status Screens](#status-screens)
+- [Touchscreen](#touchscreen)
 - [Usage](#usage)
 - [Configuration](#configuration)
 - [Troubleshooting](#troubleshooting)
@@ -20,12 +21,13 @@ This is a [ZMK module](https://zmk.dev/docs/features/modules) that provides cust
 
 ## Features
 
-- Four status screen layouts to choose from
+- Five status screen layouts to choose from
 - Active layer display
 - Peripheral battery status
 - BLE profile and output indicator
 - Active modifier display
 - Caps word indicator
+- Optional touchscreen support with swipe gestures (screen switching + brightness control)
 
 ## Installation
 
@@ -73,20 +75,32 @@ CONFIG_PROSPECTOR_STATUS_SCREEN_FIELD=y
 CONFIG_PROSPECTOR_STATUS_SCREEN_OPERATOR=y
 ```
 
-### Multiple screens + swipe navigation (touchscreen)
+## Touchscreen
 
-The Prospector's display (Waveshare 1.69" Touch LCD) has a CST816S touch
-controller, but the stock assembly guide cuts its wires (`TP_SDA`, `TP_SCL`,
-`TP_RST`, `TP_IRQ`). To use touch, solder them to the XIAO:
+The Prospector's display is the Waveshare 1.69" Touch LCD Module, which
+includes a CST816S capacitive touch controller (I2C, address `0x15`).
+However, the official assembly guide instructs builders to cut the four
+touch wires — only the eight LCD wires are soldered. Touch support is
+therefore **off by default** and requires a small hardware modification.
 
-| Display pin | XIAO pin |
-| ----------- | -------- |
-| `TP_SDA`    | D4 (SDA) |
-| `TP_SCL`    | D5 (SCL) |
-| `TP_RST`    | D0       |
-| `TP_IRQ`    | D1       |
+### Hardware wiring
 
-Then define the touch nodes in your dongle's `.overlay`:
+Open the Prospector case and solder four jumpers from the display module's
+12-pin header to the XIAO nRF52840:
+
+| Display pin | XIAO pin | Notes |
+| ----------- | -------- | ----- |
+| `TP_SDA`    | D4       | Shares I2C bus with APDS9960 (if populated) |
+| `TP_SCL`    | D5       | Shares I2C bus with APDS9960 (if populated) |
+| `TP_RST`    | D0       | Active-low reset |
+| `TP_IRQ`    | D1       | Active-low interrupt, pull-up |
+
+If the pre-crimped wires were cut too short, solder directly to the
+display's header pins.
+
+### Enabling touch in firmware
+
+1. Add the touch nodes to your dongle's `.overlay`:
 
 ```dts
 &i2c1 {
@@ -103,8 +117,9 @@ Then define the touch nodes in your dongle's `.overlay`:
     lvgl_pointer_input: lvgl_pointer_input {
         compatible = "zephyr,lvgl-pointer-input";
         input = <&cst816s>;
-        /* The CST816S frame is rotated 180° vs the display in the standard
-         * Prospector mounting; uncomment if your axes are inverted:
+        /* The CST816S coordinate frame is rotated 180° relative to the
+         * ST7789 display in the standard Prospector mounting. Uncomment
+         * if your swipe directions are inverted:
         invert-x;
         invert-y;
         */
@@ -112,24 +127,47 @@ Then define the touch nodes in your dongle's `.overlay`:
 };
 ```
 
-and compile in the screens you want to swipe between (the boot screen chosen
-above is always enabled):
+> [!NOTE]
+> These nodes must be defined in your keyboard's dongle overlay, not in a
+> module overlay. Zephyr concatenates devicetree overlays in shield order
+> (keyboard shield first, `prospector_adapter` second), and dtc resolves
+> `&label` references only after the label's definition in the combined file.
+
+2. Enable the touchscreen feature in your `.conf` file:
+
+```ini
+CONFIG_PROSPECTOR_TOUCHSCREEN=y
+```
+
+3. (Optional) Compile in additional status screens to swipe between:
 
 ```ini
 CONFIG_PROSPECTOR_SCREEN_OPERATOR_ENABLED=y
 ```
 
-Gestures (anywhere on the screen — widgets are inert, no click/scroll):
+The boot screen (chosen via the `PROSPECTOR_STATUS_SCREEN_*` choice above)
+is always compiled in. Additional screens require `PROSPECTOR_TOUCHSCREEN=y`.
 
-| Swipe     | Action                                      |
-| --------- | ------------------------------------------- |
-| left/right| cycle through compiled screens (slide anim) |
-| up/down   | raise/lower brightness (10% steps)          |
+### Gestures
 
-With multiple screens enabled the LVGL heap is raised to 32K automatically; if
-you hit a RAM overflow, also add
-`CONFIG_LV_Z_VDB_SIZE=25`. To disable swipe (single screen, smaller heap):
-`CONFIG_PROSPECTOR_SWIPE_NAVIGATION=n`.
+All widgets are treated as **inert** — touches never trigger clicks,
+scrolls, or other widget interactions. Only swipe gestures are recognized:
+
+| Swipe        | Action                                            |
+| ------------ | ------------------------------------------------- |
+| Left / Right | Cycle through compiled-in screens (slide animation) |
+| Up / Down    | Raise / lower display brightness (10% steps)       |
+
+Brightness gestures work even with a single screen compiled in. The
+brightness range is clamped to 1–100%.
+
+When `PROSPECTOR_TOUCHSCREEN` is enabled, the LVGL heap is raised to 32 KB
+automatically to accommodate multiple screen trees. If you encounter a RAM
+overflow, reduce the display buffer:
+
+```ini
+CONFIG_LV_Z_VDB_SIZE=25
+```
 
 ## Usage
 
@@ -164,6 +202,16 @@ CONFIG_PROSPECTOR_FIXED_BRIGHTNESS=80
 | `CONFIG_PROSPECTOR_USE_AMBIENT_LIGHT_SENSOR` | Use ambient light sensor for auto brightness | y |
 | `CONFIG_PROSPECTOR_FIXED_BRIGHTNESS` | Fixed display brightness when not using ambient light sensor | 50 (1-100) |
 | `CONFIG_PROSPECTOR_LAYER_NAME_UPPERCASE` | Convert layer names to uppercase (Operator and Radii only) | y |
+
+### Touchscreen
+| Name | Description | Default |
+| ---- | ----------- | ------- |
+| `CONFIG_PROSPECTOR_TOUCHSCREEN` | Enable CST816S touch input and swipe gestures (screen switching + brightness). Requires soldering TP_* wires (see [Touchscreen](#touchscreen)). | n |
+| `CONFIG_PROSPECTOR_SCREEN_CLASSIC_ENABLED` | Compile the Classic screen (always enabled when it is the boot screen) | y if default |
+| `CONFIG_PROSPECTOR_SCREEN_RADII_ENABLED` | Compile the Radii screen for swipe switching | y if default, requires `PROSPECTOR_TOUCHSCREEN` |
+| `CONFIG_PROSPECTOR_SCREEN_FIELD_ENABLED` | Compile the Field screen for swipe switching | y if default, requires `PROSPECTOR_TOUCHSCREEN` |
+| `CONFIG_PROSPECTOR_SCREEN_OPERATOR_ENABLED` | Compile the Operator screen for swipe switching | y if default, requires `PROSPECTOR_TOUCHSCREEN` |
+| `CONFIG_PROSPECTOR_SCREEN_BONGO_ENABLED` | Compile the Bongo Cat screen for swipe switching | y if default, requires `PROSPECTOR_TOUCHSCREEN` |
 
 ### Modifiers
 | Name | Description | Default |

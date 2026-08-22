@@ -29,9 +29,9 @@ config PROSPECTOR_STATUS_SCREEN_BONGO
 
 endchoice
 
-# Screens to compile in. The default screen chosen above is always enabled;
-# enable additional screens here and switch between them with swipe gestures
-# (requires the touchscreen, see PROSPECTOR_SWIPE_NAVIGATION).
+# Screens to compile in. The default screen chosen above is always enabled.
+# Additional screens require the touchscreen feature (PROSPECTOR_TOUCHSCREEN)
+# and are switched between via swipe gestures.
 
 config PROSPECTOR_SCREEN_CLASSIC_ENABLED
     bool "Compile Classic screen"
@@ -40,31 +40,40 @@ config PROSPECTOR_SCREEN_CLASSIC_ENABLED
 config PROSPECTOR_SCREEN_RADII_ENABLED
     bool "Compile Radii screen"
     default y if PROSPECTOR_STATUS_SCREEN_RADII
+    depends on PROSPECTOR_TOUCHSCREEN
 
 config PROSPECTOR_SCREEN_FIELD_ENABLED
     bool "Compile Field screen"
     default y if PROSPECTOR_STATUS_SCREEN_FIELD
+    depends on PROSPECTOR_TOUCHSCREEN
 
 config PROSPECTOR_SCREEN_OPERATOR_ENABLED
     bool "Compile Operator screen"
     default y if PROSPECTOR_STATUS_SCREEN_OPERATOR
+    depends on PROSPECTOR_TOUCHSCREEN
 
 config PROSPECTOR_SCREEN_BONGO_ENABLED
     bool "Compile Bongo Cat screen"
     default y if PROSPECTOR_STATUS_SCREEN_BONGO
+    depends on PROSPECTOR_TOUCHSCREEN
 
-config PROSPECTOR_SWIPE_NAVIGATION
-    bool "Touchscreen gestures: swipe to switch screens and adjust brightness"
-    default y if DT_HAS_HYNITRON_CST816S_ENABLED
+config PROSPECTOR_TOUCHSCREEN
+    bool "Enable touchscreen support (CST816S)"
+    default n
     select INPUT
     help
-      When enabled (and the CST816S touchscreen is wired up and enabled in
-      devicetree), swipe gestures work anywhere on the screen:
+      Enables touch input from the CST816S capacitive touch controller on
+      the Waveshare 1.69" Touch LCD Module. The stock Prospector assembly
+      guide cuts the TP_* wires; this option requires soldering them (see
+      the README for the wiring guide).
+
+      When enabled, swipe gestures work anywhere on the screen:
       - left/right : cycle through compiled-in status screens (slide anim)
       - up/down    : raise/lower display brightness (10% steps)
 
       All widgets are treated as inert (no click/scroll) — touches only
-      produce gestures.
+      produce gestures. Multiple status screens can be compiled in
+      (PROSPECTOR_SCREEN_*_ENABLED) only when this is enabled.
 
 config PROSPECTOR_ROTATE_DISPLAY_180
     bool "Rotate the display 180 degrees"
