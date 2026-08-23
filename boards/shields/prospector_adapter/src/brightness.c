@@ -23,7 +23,7 @@ static const struct device *pwm_leds_dev = DEVICE_DT_GET_ONE(pwm_leds);
  * acceptable for a non-critical display setting.
  */
 static atomic_t current_brightness =
-#ifdef CONFIG_PROSPECTOR_USE_AMBIENT_LIGHT_SENSOR
+#if IS_ENABLED(CONFIG_PROSPECTOR_USE_AMBIENT_LIGHT_SENSOR)
     100
 #else
     CONFIG_PROSPECTOR_FIXED_BRIGHTNESS
@@ -151,7 +151,7 @@ static int blink_init(const struct device *dev) {
 }
 SYS_INIT(blink_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);
 
-#ifdef CONFIG_PROSPECTOR_USE_AMBIENT_LIGHT_SENSOR
+#if IS_ENABLED(CONFIG_PROSPECTOR_USE_AMBIENT_LIGHT_SENSOR)
 
 #define SENSOR_MIN      0       // Minimum sensor reading
 #define SENSOR_MAX      100   // Maximum sensor reading
