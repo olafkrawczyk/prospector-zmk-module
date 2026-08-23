@@ -201,13 +201,13 @@ static void pomodoro_ui_update_cb(struct zmk_pomodoro_state_changed st) {
 
     /* Blink only on phase end, not on start. */
     if (is_phase_end) {
-        prospector_brightness_blink(3);
+        prospector_brightness_blink(5);
     }
 
 #if defined(TOUCH_ACTIVE) && IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_POMODORO_ENABLED)
     if (current_screen != POMODORO_SCREEN_INDEX) {
         current_screen = POMODORO_SCREEN_INDEX;
-        lv_screen_load_anim(screens[current_screen].obj, LV_SCR_LOAD_ANIM_FADE_IN, 250, 0, false);
+        lv_screen_load_anim(screens[current_screen].obj, LV_SCR_LOAD_ANIM_NONE, 0, 0, false);
     }
 #endif
 }

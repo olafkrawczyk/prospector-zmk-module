@@ -64,13 +64,13 @@ static void blink_handler(struct k_work *work) {
         return;
     }
 
-    /* Alternate between the saved brightness and a dim level. */
-    uint8_t target = (blink_toggles_left % 2 == 0) ? blink_saved_brightness : 3;
+    /* Alternate between a dim level and the saved brightness. */
+    uint8_t target = (blink_toggles_left % 2 != 0) ? blink_saved_brightness : 3;
     led_set_brightness(pwm_leds_dev, DISP_BL, target);
 
     blink_toggles_left--;
     if (blink_toggles_left > 0) {
-        k_work_reschedule(&blink_work, K_MSEC(180));
+        k_work_reschedule(&blink_work, K_MSEC(500));
     } else {
         led_set_brightness(pwm_leds_dev, DISP_BL, blink_saved_brightness);
         atomic_set(&current_brightness, (atomic_val_t)blink_saved_brightness);

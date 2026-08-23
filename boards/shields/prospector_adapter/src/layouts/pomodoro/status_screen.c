@@ -44,14 +44,19 @@ static void set_flash_opa(void *obj, int32_t v) {
     lv_obj_set_style_opa((lv_obj_t *)obj, (lv_opa_t)v, LV_PART_MAIN);
 }
 
+static int32_t flash_step_path(const lv_anim_t *a) {
+    return (a->playback_now) ? 0 : 220;
+}
+
 static void trigger_red_flash(void) {
     lv_anim_t a;
     lv_anim_init(&a);
     lv_anim_set_var(&a, flash_overlay);
     lv_anim_set_values(&a, 0, 220);
-    lv_anim_set_time(&a, 250);
-    lv_anim_set_playback_time(&a, 250);
-    lv_anim_set_repeat_count(&a, 3);
+    lv_anim_set_time(&a, 500);
+    lv_anim_set_playback_time(&a, 500);
+    lv_anim_set_repeat_count(&a, 5);
+    lv_anim_set_path_cb(&a, flash_step_path);
     lv_anim_set_exec_cb(&a, set_flash_opa);
     lv_anim_start(&a);
 }
