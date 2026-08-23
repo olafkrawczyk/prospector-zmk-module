@@ -32,9 +32,7 @@ static atomic_t current_brightness =
 
 #if IS_ENABLED(CONFIG_SETTINGS)
 
-#ifndef CONFIG_ZMK_SETTINGS_SAVE_DEBOUNCE
-#define CONFIG_ZMK_SETTINGS_SAVE_DEBOUNCE 1000
-#endif
+#define PROSPECTOR_BRIGHTNESS_SAVE_DEBOUNCE 1000
 
 static struct k_work_delayable brightness_save_work;
 
@@ -94,7 +92,7 @@ uint8_t prospector_brightness_step(int8_t delta) {
         LOG_ERR("Failed to set brightness");
     }
 #if IS_ENABLED(CONFIG_SETTINGS)
-    k_work_reschedule(&brightness_save_work, K_MSEC(CONFIG_ZMK_SETTINGS_SAVE_DEBOUNCE));
+    k_work_reschedule(&brightness_save_work, K_MSEC(PROSPECTOR_BRIGHTNESS_SAVE_DEBOUNCE));
 #endif
     return (uint8_t)b;
 }
