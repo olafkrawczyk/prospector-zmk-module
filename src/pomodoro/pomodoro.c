@@ -7,8 +7,8 @@
 
 LOG_MODULE_REGISTER(zmk_pomodoro, CONFIG_ZMK_LOG_LEVEL);
 
-static const uint16_t preset_work_sec[ZMK_POMODORO_PRESET_COUNT] = {25 * 60, 50 * 60};
-static const uint16_t preset_break_sec[ZMK_POMODORO_PRESET_COUNT] = {5 * 60, 10 * 60};
+static const uint16_t preset_work_sec[ZMK_POMODORO_PRESET_COUNT] = {25 * 60, 50 * 60, 60};
+static const uint16_t preset_break_sec[ZMK_POMODORO_PRESET_COUNT] = {5 * 60, 10 * 60, 10};
 
 static struct k_work_delayable pomodoro_tick_work;
 

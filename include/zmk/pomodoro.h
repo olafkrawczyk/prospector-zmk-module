@@ -8,9 +8,10 @@
  * 1 Hz k_work_delayable. The screen only renders the current state; the
  * countdown keeps running while other screens are shown.
  *
- * Two fixed interval presets (work / break, in minutes):
+ * Two fixed interval presets + one debug preset (work / break, in minutes):
  *   preset 0 -> 25 / 5
  *   preset 1 -> 50 / 10
+ *   preset 2 -> 1 min / 10 sec  (debug)
  *
  * State machine:
  *   IDLE  -- start -->        WORK   (uses the selected preset's work time)
@@ -36,7 +37,7 @@ enum zmk_pomodoro_transition {
     ZMK_POMODORO_TRANSITION_PRESET_CHANGED = 5,
 };
 
-#define ZMK_POMODORO_PRESET_COUNT 2
+#define ZMK_POMODORO_PRESET_COUNT 3
 
 struct zmk_pomodoro_snapshot {
     enum zmk_pomodoro_state state;
