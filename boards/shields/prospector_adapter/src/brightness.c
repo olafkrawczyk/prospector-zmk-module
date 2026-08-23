@@ -9,6 +9,7 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(als, 4);
 
+#include <zephyr/settings/settings.h>
 #include <prospector_brightness.h>
 
 static const struct device *pwm_leds_dev = DEVICE_DT_GET_ONE(pwm_leds);
@@ -29,6 +30,58 @@ static atomic_t current_brightness =
 #endif
     ;
 
+#if IS_ENABLED(CONFIG_SETTINGS)
+
+#ifndef CONFIG_ZMK_SETTINGS_SAVE_DEBOUNCE
+#define CONFIG_ZMK_SETTINGS_SAVE_DEBOUNCE 1000
+#endif
+
+static struct k_work_delayable brightness_save_work;
+
+static void brightness_save_work_handler(struct k_work *work) {
+    ARG_UNUSED(work);
+    uint8_t b = (uint8_t)atomic_get(&current_brightness);
+    settings_save_one("prospector/brightness", &b, sizeof(b));
+}
+
+static int brightness_settings_load_cb(const char *name, size_t len, settings_read_cb read_cb,
+                                       void *cb_arg) {
+    const char *next;
+    if (settings_name_steq(name, "brightness", &next) && !next) {
+        if (len != sizeof(uint8_t)) {
+            return -EINVAL;
+        }
+
+        uint8_t b;
+        int rc = read_cb(cb_arg, &b, sizeof(b));
+        if (rc >= 0) {
+            if (b < 1) {
+                b = 1;
+            } else if (b > 100) {
+                b = 100;
+            }
+            atomic_set(&current_brightness, (atomic_val_t)b);
+            led_set_brightness(pwm_leds_dev, DISP_BL, b);
+        }
+
+        return MIN(rc, 0);
+    }
+    return -ENOENT;
+}
+
+SETTINGS_STATIC_HANDLER_DEFINE(prospector_brightness, "prospector", NULL,
+                               brightness_settings_load_cb, NULL, NULL);
+
+static int brightness_settings_init(const struct device *dev) {
+    ARG_UNUSED(dev);
+    k_work_init_delayable(&brightness_save_work, brightness_save_work_handler);
+    return 0;
+}
+
+SYS_INIT(brightness_settings_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);
+
+#endif /* IS_ENABLED(CONFIG_SETTINGS) */
+
 uint8_t prospector_brightness_step(int8_t delta) {
     int16_t b = (int16_t)atomic_get(&current_brightness) + delta;
     if (b < 1) {
@@ -40,6 +93,9 @@ uint8_t prospector_brightness_step(int8_t delta) {
     if (led_set_brightness(pwm_leds_dev, DISP_BL, (uint8_t)b)) {
         LOG_ERR("Failed to set brightness");
     }
+#if IS_ENABLED(CONFIG_SETTINGS)
+    k_work_reschedule(&brightness_save_work, K_MSEC(CONFIG_ZMK_SETTINGS_SAVE_DEBOUNCE));
+#endif
     return (uint8_t)b;
 }
 
