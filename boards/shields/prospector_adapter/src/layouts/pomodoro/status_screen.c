@@ -45,7 +45,12 @@ static void set_flash_opa(void *obj, int32_t v) {
 }
 
 static int32_t flash_step_path(const lv_anim_t *a) {
-    return (a->playback_now) ? 0 : 220;
+    return (a->reverse_play_in_progress) ? 0 : 220;
+}
+
+static void flash_completed_cb(lv_anim_t *a) {
+    ARG_UNUSED(a);
+    lv_obj_set_style_opa(flash_overlay, 0, LV_PART_MAIN);
 }
 
 static void trigger_red_flash(void) {
@@ -57,6 +62,7 @@ static void trigger_red_flash(void) {
     lv_anim_set_playback_time(&a, 500);
     lv_anim_set_repeat_count(&a, 5);
     lv_anim_set_path_cb(&a, flash_step_path);
+    lv_anim_set_completed_cb(&a, flash_completed_cb);
     lv_anim_set_exec_cb(&a, set_flash_opa);
     lv_anim_start(&a);
 }
