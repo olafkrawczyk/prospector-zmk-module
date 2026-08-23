@@ -191,13 +191,18 @@ static void attach_gesture_handler(lv_obj_t *screen) {
      IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_BONGO_ENABLED))
 
 static void pomodoro_ui_update_cb(struct zmk_pomodoro_state_changed st) {
-    /* Only react to phase-end transitions (work -> pause, pause -> idle). */
-    if (st.transition != ZMK_POMODORO_TRANSITION_WORK_ENDED &&
-        st.transition != ZMK_POMODORO_TRANSITION_PAUSE_ENDED) {
+    bool is_phase_end = (st.transition == ZMK_POMODORO_TRANSITION_WORK_ENDED ||
+                         st.transition == ZMK_POMODORO_TRANSITION_PAUSE_ENDED);
+    bool is_started = (st.transition == ZMK_POMODORO_TRANSITION_STARTED);
+
+    if (!is_phase_end && !is_started) {
         return;
     }
 
-    prospector_brightness_blink(3);
+    /* Blink only on phase end, not on start. */
+    if (is_phase_end) {
+        prospector_brightness_blink(3);
+    }
 
 #if defined(TOUCH_ACTIVE) && IS_ENABLED(CONFIG_PROSPECTOR_SCREEN_POMODORO_ENABLED)
     if (current_screen != POMODORO_SCREEN_INDEX) {
